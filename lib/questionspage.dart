@@ -14,7 +14,7 @@ class questionsState extends State<questionsPage> {
 
   void selectAnswer() {
     setState(() {
-      if (questionIndex < questions.length) {
+      if (questionIndex < questions.length - 1) {
         questionIndex = questionIndex + 1;
       } else {
         questionIndex = 0;
@@ -27,7 +27,8 @@ class questionsState extends State<questionsPage> {
     return MaterialApp(
         home: Scaffold(
             appBar: AppBar(title: const Text('Register page')),
-            body: Column(
+            body: Center(
+                child: Column(
               children: [
                 Text(questions[questionIndex]),
                 ElevatedButton(onPressed: selectAnswer, child: Text("answer")),
@@ -35,6 +36,6 @@ class questionsState extends State<questionsPage> {
                 ElevatedButton(onPressed: selectAnswer, child: Text("answer")),
                 ElevatedButton(onPressed: selectAnswer, child: Text("answer"))
               ],
-            )));
+            ))));
   }
 }
