@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ayurvedic/questionspage.dart';
 
 class registerPage extends StatelessWidget {
   const registerPage({super.key});
@@ -78,6 +79,17 @@ class registerPage extends StatelessWidget {
                           borderRadius: BorderRadius.circular(21))),
                 ),
               ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(12),
+              child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) {
+                      return questionsPage();
+                    }));
+                  },
+                  child: Text('Next')),
             ),
           ],
         ),
