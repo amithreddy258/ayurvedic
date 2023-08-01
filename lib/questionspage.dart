@@ -1,20 +1,27 @@
 import 'package:flutter/material.dart';
 
+class QuestionData {
+  final String question;
+  final List<String> answers;
+
+  QuestionData(this.question, this.answers);
+}
+
 var questionSets = [
   [
-    "Question 1 (Set 1)",
-    "Question 2 (Set 1)",
-    "Question 3 (Set 1)",
+    QuestionData("Question 1 (Set 1)", ["Answer 1", "Answer 2", "Answer 3"]),
+    QuestionData("Question 2 (Set 1)", ["Answer 1", "Answer 2", "Answer 3"]),
+    QuestionData("Question 3 (Set 1)", ["Answer 1", "Answer 2", "Answer 3"]),
   ],
   [
-    "Question 4 (Set 2)",
-    "Question 5 (Set 2)",
-    "Question 6 (Set 2)",
+    QuestionData("Question 4 (Set 2)", ["Answer 1", "Answer 2", "Answer 3"]),
+    QuestionData("Question 5 (Set 2)", ["Answer 1", "Answer 2", "Answer 3"]),
+    QuestionData("Question 6 (Set 2)", ["Answer 1", "Answer 2", "Answer 3"]),
   ],
   [
-    "Question 7 (Set 3)",
-    "Question 8 (Set 3)",
-    "Question 9 (Set 3)",
+    QuestionData("Question 7 (Set 3)", ["Answer 1", "Answer 2", "Answer 3"]),
+    QuestionData("Question 8 (Set 3)", ["Answer 1", "Answer 2", "Answer 3"]),
+    QuestionData("Question 9 (Set 3)", ["Answer 1", "Answer 2", "Answer 3"]),
   ],
 ];
 
@@ -28,7 +35,7 @@ class questionsPage extends StatefulWidget {
 class questionsState extends State<questionsPage> {
   var currentSetIndex = 0;
   var questionIndex = 0;
-  var selectedAnswers = <String>[];
+  List<String> selectedAnswers = [];
 
   void selectAnswer(String answer) {
     setState(() {
@@ -43,6 +50,7 @@ class questionsState extends State<questionsPage> {
     setState(() {
       currentSetIndex++;
       questionIndex = 0;
+      selectedAnswers.clear();
     });
   }
 
@@ -87,15 +95,19 @@ class questionsState extends State<questionsPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            //question
             Text(
-              questionSets[currentSetIndex][questionIndex],
+              questionSets[currentSetIndex][questionIndex].question,
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
+
+            //options
             SizedBox(height: 20),
             Column(
               children: [
-                for (var index = 0; index < 3; index++)
+                for (var answer
+                    in questionSets[currentSetIndex][questionIndex].answers)
                   Padding(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -112,22 +124,24 @@ class questionsState extends State<questionsPage> {
                               vertical: 16, horizontal: 24),
                         ),
                         onPressed: () {
-                          selectAnswer("Option ${index + 1}");
+                          selectAnswer(answer);
                           // if (isLastQuestion && !isLastSet) {
                           //   goToNextSet();
                           // }
                         },
-                        child: Text("Option ${index + 1}",
-                            style: TextStyle(fontSize: 16)),
+                        child: Text(answer, style: TextStyle(fontSize: 16)),
                       ),
                     ),
                   ),
               ],
             ),
+
+            //down buttons
             SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
+                //back button
                 if (questionIndex > 0)
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
@@ -141,6 +155,8 @@ class questionsState extends State<questionsPage> {
                     },
                     child: Icon(Icons.arrow_back, size: 24),
                   ),
+
+                //next button
                 if (isLastQuestion && !isLastSet)
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
@@ -152,6 +168,8 @@ class questionsState extends State<questionsPage> {
                     },
                     child: Icon(Icons.arrow_forward, size: 24),
                   ),
+
+                //Finsih button
                 if (isLastQuestion && isLastSet)
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
