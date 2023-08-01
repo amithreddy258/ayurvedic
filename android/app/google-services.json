@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1092555321256",
+    "project_id": "ayurvedicfood-593c1",
+    "storage_bucket": "ayurvedicfood-593c1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1092555321256:android:cc8b6af243571aa223f79d",
+        "android_client_info": {
+          "package_name": "com.example.ayurvedic"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1092555321256-vhc4ug1cr2jcimbnutbk3lkdt5l11k2u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAEJevIkzCtsR0a0kCpOsLgLfkdBE8-A-M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1092555321256-vhc4ug1cr2jcimbnutbk3lkdt5l11k2u.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

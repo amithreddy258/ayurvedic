@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 class QuestionData {
@@ -14,7 +16,8 @@ var questionSets = [
     QuestionData("Question 3 (Set 1)", ["Answer 1", "Answer 2", "Answer 3"]),
   ],
   [
-    QuestionData("Question 4 (Set 2)", ["Answer 1", "Answer 2", "Answer 3"]),
+    QuestionData(
+        "Question 4 (Set 2)", ["Answer 1", "Answer 2", "Answer 3", "Answer4"]),
     QuestionData("Question 5 (Set 2)", ["Answer 1", "Answer 2", "Answer 3"]),
     QuestionData("Question 6 (Set 2)", ["Answer 1", "Answer 2", "Answer 3"]),
   ],
@@ -96,11 +99,33 @@ class questionsState extends State<questionsPage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             //question
-            Text(
-              questionSets[currentSetIndex][questionIndex].question,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+            StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection("questions")
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  List<Row> questionwidgets = [];
+                  if (snapshot.hasData) {
+                    final questions = snapshot.data?.docs.reversed.toList();
+                    for (var question in questions!) {
+                      final questionwidget = Row(
+                        children: [
+                          Text(
+                            question['question'],
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.bold),
+                          )
+                        ],
+                      );
+                      questionwidgets.add(questionwidget);
+                    }
+                  }
+                  return Expanded(
+                      child: ListView(
+                    children: questionwidgets,
+                  ));
+                }),
 
             //options
             SizedBox(height: 20),
@@ -128,6 +153,7 @@ class questionsState extends State<questionsPage> {
                           // if (isLastQuestion && !isLastSet) {
                           //   goToNextSet();
                           // }
+                          //data save
                         },
                         child: Text(answer, style: TextStyle(fontSize: 16)),
                       ),
