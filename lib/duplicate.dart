@@ -84,45 +84,21 @@ class questionsState extends State<questionsPage> {
       appBar: AppBar(title: const Text('Questionnaire')),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              questionSets[currentSetIndex][questionIndex],
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+            Text(questionSets[currentSetIndex][questionIndex]),
             SizedBox(height: 20),
-            Column(
-              children: [
-                for (var index = 0; index < 3; index++)
-                  Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.grey),
-                      ),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20)),
-                          padding: EdgeInsets.symmetric(
-                              vertical: 16, horizontal: 24),
-                        ),
-                        onPressed: () {
-                          selectAnswer("Option ${index + 1}");
-                          // if (isLastQuestion && !isLastSet) {
-                          //   goToNextSet();
-                          // }
-                        },
-                        child: Text("Option ${index + 1}",
-                            style: TextStyle(fontSize: 16)),
-                      ),
-                    ),
-                  ),
-              ],
+            ListView.builder(
+              shrinkWrap: true,
+              itemCount: 3,
+              itemBuilder: (context, index) {
+                final answer = "Option ${index + 1}";
+                return ElevatedButton(
+                  onPressed: () {
+                    selectAnswer(answer);
+                  },
+                  child: Text(answer),
+                );
+              },
             ),
             SizedBox(height: 20),
             Row(
@@ -130,39 +106,27 @@ class questionsState extends State<questionsPage> {
               children: [
                 if (questionIndex > 0)
                   ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      shape: CircleBorder(),
-                      padding: EdgeInsets.all(16),
-                    ),
                     onPressed: () {
                       setState(() {
                         questionIndex--;
                       });
                     },
-                    child: Icon(Icons.arrow_back, size: 24),
+                    child: Text("Back"),
                   ),
                 if (isLastQuestion && !isLastSet)
                   ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      shape: CircleBorder(),
-                      padding: EdgeInsets.all(16),
-                    ),
                     onPressed: () {
                       goToNextSet();
                     },
-                    child: Icon(Icons.arrow_forward, size: 24),
+                    child: Text("Next"),
                   ),
                 if (isLastQuestion && isLastSet)
                   ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      shape: CircleBorder(),
-                      padding: EdgeInsets.all(16),
-                    ),
                     onPressed: () {
                       showThankYouDialog();
                       resetQuestionnaire();
                     },
-                    child: Icon(Icons.check, size: 24),
+                    child: Text("Finish"),
                   ),
               ],
             ),
