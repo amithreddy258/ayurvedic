@@ -1,217 +1,136 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-
-class QuestionData {
-  final String question;
-  final List<String> answers;
-
-  QuestionData(this.question, this.answers);
-}
-
-var questionSets = [
-  [
-    QuestionData("Question 1 (Set 1)", ["Answer 1", "Answer 2", "Answer 3"]),
-    QuestionData("Question 2 (Set 1)", ["Answer 1", "Answer 2", "Answer 3"]),
-    QuestionData("Question 3 (Set 1)", ["Answer 1", "Answer 2", "Answer 3"]),
-  ],
-  [
-    QuestionData(
-        "Question 4 (Set 2)", ["Answer 1", "Answer 2", "Answer 3", "Answer4"]),
-    QuestionData("Question 5 (Set 2)", ["Answer 1", "Answer 2", "Answer 3"]),
-    QuestionData("Question 6 (Set 2)", ["Answer 1", "Answer 2", "Answer 3"]),
-  ],
-  [
-    QuestionData("Question 7 (Set 3)", ["Answer 1", "Answer 2", "Answer 3"]),
-    QuestionData("Question 8 (Set 3)", ["Answer 1", "Answer 2", "Answer 3"]),
-    QuestionData("Question 9 (Set 3)", ["Answer 1", "Answer 2", "Answer 3"]),
-  ],
-];
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class questionsPage extends StatefulWidget {
-  const questionsPage({Key? key}) : super(key: key);
-
   @override
-  State<questionsPage> createState() => questionsState();
+  questionsPageState createState() => questionsPageState();
 }
 
-class questionsState extends State<questionsPage> {
-  var currentSetIndex = 0;
-  var questionIndex = 0;
-  List<String> selectedAnswers = [];
+class questionsPageState extends State<questionsPage> {
+  final FirebaseFirestore firestore = FirebaseFirestore.instance;
+  int currentSet = 1;
+  int currentQuestion = 0;
+  List<Map<String, dynamic>> questionsData = [];
+  List<String> selectedOptions = [];
 
-  void selectAnswer(String answer) {
+  Future<void> loadQuestions() async {
+    // Database
+    QuerySnapshot snapshot =
+        await firestore.collection('questions_set$currentSet').get();
     setState(() {
-      selectedAnswers.add(answer);
-      if (questionIndex < questionSets[currentSetIndex].length - 1) {
-        questionIndex++;
-      }
+      questionsData = snapshot.docs
+          .map((doc) => {
+                'question': doc.get('question'),
+                'options': List<String>.from(doc.get('options')),
+              })
+          .toList();
     });
   }
 
-  void goToNextSet() {
-    setState(() {
-      currentSetIndex++;
-      questionIndex = 0;
-      selectedAnswers.clear();
+  @override
+  void initState() {
+    super.initState();
+    Firebase.initializeApp().then((_) {
+      loadQuestions();
     });
   }
 
-  void showThankYouDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Thank You!"),
-          content: Text("Thanks for your participation!"),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text("Close"),
-            ),
-          ],
-        );
-      },
-    );
+  void onNextPressed() {
+    if (currentSet < 3) {
+      setState(() {
+        currentSet++;
+        currentQuestion = 0;
+      });
+      loadQuestions();
+    } else {
+      // Show a dialog with "Thank you for your participation" message
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Thank You!'),
+            content: Text('Thank you for participating in the survey.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
 
-  void resetQuestionnaire() {
-    setState(() {
-      currentSetIndex = 0;
-      questionIndex = 0;
-      selectedAnswers.clear();
-    });
+  void onFinishPressed() {
+    // saving data into database
   }
 
   @override
   Widget build(BuildContext context) {
-    final isLastQuestion =
-        questionIndex == questionSets[currentSetIndex].length - 1;
-    final isLastSet = currentSetIndex == questionSets.length - 1;
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Questionnaire')),
+      appBar: AppBar(
+        title: Text('Ayurvedic Food Recommendations'),
+      ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            //question
-            StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection("questions")
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  List<Row> questionwidgets = [];
-                  if (snapshot.hasData) {
-                    final questions = snapshot.data?.docs.reversed.toList();
-                    for (var question in questions!) {
-                      final questionwidget = Row(
-                        children: [
-                          Text(
-                            question['question'],
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.bold),
-                          )
-                        ],
-                      );
-                      questionwidgets.add(questionwidget);
-                    }
-                  }
-                  return Expanded(
-                      child: ListView(
-                    children: questionwidgets,
-                  ));
-                }),
-
-            //options
-            SizedBox(height: 20),
-            Column(
-              children: [
-                for (var answer
-                    in questionSets[currentSetIndex][questionIndex].answers)
-                  Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.grey),
-                      ),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20)),
-                          padding: EdgeInsets.symmetric(
-                              vertical: 16, horizontal: 24),
-                        ),
-                        onPressed: () {
-                          selectAnswer(answer);
-                          // if (isLastQuestion && !isLastSet) {
-                          //   goToNextSet();
-                          // }
-                          //data save
+        child: questionsData.isEmpty
+            ? CircularProgressIndicator()
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Set $currentSet - Question ${currentQuestion + 1} of ${questionsData.length}',
+                    style: TextStyle(fontSize: 20),
+                  ),
+                  //questions
+                  SizedBox(height: 20),
+                  Text(
+                    questionsData[currentQuestion]['question'],
+                    style: TextStyle(fontSize: 18),
+                  ),
+                  // options
+                  SizedBox(height: 20),
+                  Column(
+                    children: List.generate(
+                      questionsData[currentQuestion]['options'].length,
+                      (index) => RadioListTile(
+                        title: Text(
+                            questionsData[currentQuestion]['options'][index]),
+                        value: questionsData[currentQuestion]['options'][index],
+                        groupValue: selectedOptions.length > currentQuestion
+                            ? selectedOptions[currentQuestion]
+                            : null,
+                        onChanged: (value) {
+                          setState(() {
+                            selectedOptions[currentQuestion] = value;
+                          });
                         },
-                        child: Text(answer, style: TextStyle(fontSize: 16)),
                       ),
                     ),
                   ),
-              ],
-            ),
-
-            //down buttons
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                //back button
-                if (questionIndex > 0)
+                  // buttons
+                  SizedBox(height: 20),
                   ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      shape: CircleBorder(),
-                      padding: EdgeInsets.all(16),
-                    ),
                     onPressed: () {
-                      setState(() {
-                        questionIndex--;
-                      });
+                      if (currentQuestion < questionsData.length - 1) {
+                        setState(() {
+                          currentQuestion++;
+                        });
+                      } else {
+                        onNextPressed();
+                      }
                     },
-                    child: Icon(Icons.arrow_back, size: 24),
-                  ),
-
-                //next button
-                if (isLastQuestion && !isLastSet)
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      shape: CircleBorder(),
-                      padding: EdgeInsets.all(16),
+                    child: Text(
+                      currentQuestion < questionsData.length - 1
+                          ? 'Next'
+                          : 'Finish',
                     ),
-                    onPressed: () {
-                      goToNextSet();
-                    },
-                    child: Icon(Icons.arrow_forward, size: 24),
                   ),
-
-                //Finsih button
-                if (isLastQuestion && isLastSet)
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      shape: CircleBorder(),
-                      padding: EdgeInsets.all(16),
-                    ),
-                    onPressed: () {
-                      showThankYouDialog();
-                      resetQuestionnaire();
-                    },
-                    child: Icon(Icons.check, size: 24),
-                  ),
-              ],
-            ),
-          ],
-        ),
+                ],
+              ),
       ),
     );
   }
