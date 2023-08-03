@@ -12,7 +12,8 @@ class questionsPageState extends State<questionsPage> {
   int currentSet = 1;
   int currentQuestion = 0;
   List<Map<String, dynamic>> questionsData = [];
-  List<String> selectedOptions = [];
+  List<String?> selectedOptions = List.filled(60, null);
+  List<Map<String, dynamic>> responses = [];
 
   Future<void> loadQuestions() async {
     // Database
@@ -37,43 +38,82 @@ class questionsPageState extends State<questionsPage> {
   }
 
   void onNextPressed() {
-    if (currentSet < 3) {
+    if (currentQuestion < questionsData.length - 1) {
       setState(() {
-        currentSet++;
-        currentQuestion = 0;
+        currentQuestion++;
       });
-      loadQuestions();
     } else {
-      // Show a dialog with "Thank you for your participation" message
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('Thank You!'),
-            content: Text('Thank you for participating in the survey.'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: Text('OK'),
-              ),
-            ],
-          );
-        },
-      );
+      if (currentSet < 3) {
+        setState(() {
+          currentSet++;
+          currentQuestion = 0;
+        });
+        loadQuestions();
+      } else {
+        // tfinish
+        onFinishPressed();
+      }
     }
   }
 
   void onFinishPressed() {
-    // saving data into database
+    // currentQuestion = 1;
+    // currentSet = 1;
+    // thank you pop-up
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Thank You!'),
+          content: Text('Thank you for participating in the survey.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+    // Saving data into the database
+    print(responses);
+  }
+
+  void onBackPressed() {
+    if (currentQuestion > 0) {
+      setState(() {
+        currentQuestion--;
+      });
+    }
+  }
+
+  Widget buildButtons() {
+    if (currentQuestion == questionsData.length - 1 && currentSet < 3) {
+      // next button
+      return IconButton(
+        onPressed: onNextPressed,
+        icon: Icon(Icons.arrow_forward),
+        iconSize: 30,
+      );
+    } else if (currentSet == 3 && currentQuestion == questionsData.length - 1) {
+      // finish button
+      return IconButton(
+        onPressed: onFinishPressed,
+        icon: Icon(Icons.check_circle_sharp),
+        iconSize: 30,
+      );
+    }
+    //nothing
+    return SizedBox();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Ayurvedic Food Recommendations'),
+        title: Text('Questionnaire'),
       ),
       body: Center(
         child: questionsData.isEmpty
@@ -85,13 +125,13 @@ class questionsPageState extends State<questionsPage> {
                     'Set $currentSet - Question ${currentQuestion + 1} of ${questionsData.length}',
                     style: TextStyle(fontSize: 20),
                   ),
-                  //questions
+                  // Questions
                   SizedBox(height: 20),
                   Text(
                     questionsData[currentQuestion]['question'],
                     style: TextStyle(fontSize: 18),
                   ),
-                  // options
+                  // Options
                   SizedBox(height: 20),
                   Column(
                     children: List.generate(
@@ -100,34 +140,36 @@ class questionsPageState extends State<questionsPage> {
                         title: Text(
                             questionsData[currentQuestion]['options'][index]),
                         value: questionsData[currentQuestion]['options'][index],
-                        groupValue: selectedOptions.length > currentQuestion
-                            ? selectedOptions[currentQuestion]
-                            : null,
+                        groupValue: selectedOptions[currentQuestion],
                         onChanged: (value) {
                           setState(() {
-                            selectedOptions[currentQuestion] = value;
+                            selectedOptions[currentQuestion] = value as String?;
+                            responses.add({
+                              'setNumber': currentSet,
+                              'questionNumber': currentQuestion + 1,
+                              'selectedOption': value,
+                            });
+                            if (currentQuestion != questionsData.length - 1) {
+                              onNextPressed();
+                            }
                           });
                         },
                       ),
                     ),
                   ),
-                  // buttons
+                  // Buttons
                   SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      if (currentQuestion < questionsData.length - 1) {
-                        setState(() {
-                          currentQuestion++;
-                        });
-                      } else {
-                        onNextPressed();
-                      }
-                    },
-                    child: Text(
-                      currentQuestion < questionsData.length - 1
-                          ? 'Next'
-                          : 'Finish',
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      if (currentQuestion > 0) // Show back button conditionally
+                        IconButton(
+                          onPressed: onBackPressed,
+                          icon: Icon(Icons.arrow_back_sharp),
+                          iconSize: 30,
+                        ),
+                      buildButtons(),
+                    ],
                   ),
                 ],
               ),

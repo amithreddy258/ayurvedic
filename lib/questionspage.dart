@@ -89,6 +89,63 @@ class questionsPageState extends State<questionsPage> {
     }
   }
 
+  Widget buildButtons() {
+    if (currentQuestion == questionsData.length - 1 && currentSet < 3) {
+      // next button
+      return IconButton(
+        onPressed: onNextPressed,
+        icon: Icon(Icons.arrow_forward),
+        iconSize: 30,
+      );
+    } else if (currentSet == 3 && currentQuestion == questionsData.length - 1) {
+      // finish button
+      return IconButton(
+        onPressed: onFinishPressed,
+        icon: Icon(Icons.check_circle_sharp),
+        iconSize: 30,
+      );
+    }
+    //nothing
+    return SizedBox();
+  }
+
+  Widget buildOptionsList() {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
+      itemCount: questionsData[currentQuestion]['options'].length,
+      itemBuilder: (context, index) {
+        String option = questionsData[currentQuestion]['options'][index];
+        return Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15.0),
+          ),
+          color: selectedOptions[currentQuestion] == option
+              ? Colors.blue[200]
+              : Colors.white,
+          child: RadioListTile(
+            title: Text(option),
+            value: option,
+            groupValue: selectedOptions[currentQuestion],
+            onChanged: (value) {
+              setState(() {
+                selectedOptions[currentQuestion] = value as String?;
+                responses.add({
+                  'setNumber': currentSet,
+                  'questionNumber': currentQuestion + 1,
+                  'selectedOption': value,
+                });
+                if (currentQuestion != questionsData.length - 1) {
+                  onNextPressed();
+                }
+              });
+            },
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -107,63 +164,33 @@ class questionsPageState extends State<questionsPage> {
                   ),
                   // Questions
                   SizedBox(height: 20),
-                  Text(
-                    questionsData[currentQuestion]['question'],
-                    style: TextStyle(fontSize: 18),
-                  ),
-                  // Options
-                  SizedBox(height: 20),
-                  Column(
-                    children: List.generate(
-                      questionsData[currentQuestion]['options'].length,
-                      (index) => RadioListTile(
-                        title: Text(
-                            questionsData[currentQuestion]['options'][index]),
-                        value: questionsData[currentQuestion]['options'][index],
-                        groupValue: selectedOptions[currentQuestion],
-                        onChanged: (value) {
-                          setState(() {
-                            selectedOptions[currentQuestion] = value as String?;
-                            responses.add({
-                              'setNumber': currentSet,
-                              'questionNumber': currentQuestion + 1,
-                              'selectedOption': value,
-                            });
-                          });
-                        },
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15.0),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        questionsData[currentQuestion]['question'],
+                        style: TextStyle(fontSize: 18),
                       ),
                     ),
                   ),
+                  // Options
+                  SizedBox(height: 20),
+                  buildOptionsList(),
                   // Buttons
                   SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       if (currentQuestion > 0) // Show back button conditionally
-                        ElevatedButton(
+                        IconButton(
                           onPressed: onBackPressed,
-                          child: Text('Back'),
+                          icon: Icon(Icons.arrow_back_sharp),
+                          iconSize: 30,
                         ),
-                      ElevatedButton(
-                        onPressed: () {
-                          if (currentQuestion < questionsData.length - 1) {
-                            onNextPressed();
-                          } else {
-                            if (currentSet < 3) {
-                              onNextPressed();
-                            } else {
-                              onFinishPressed();
-                            }
-                          }
-                        },
-                        child: Text(
-                          currentQuestion < questionsData.length - 1
-                              ? 'Next'
-                              : currentSet < 3
-                                  ? 'Next Set'
-                                  : 'Finish',
-                        ),
-                      ),
+                      buildButtons(),
                     ],
                   ),
                 ],
