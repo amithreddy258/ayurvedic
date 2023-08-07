@@ -24,6 +24,7 @@ class questionsPageState extends State<questionsPage> {
           .map((doc) => {
                 'question': doc.get('question'),
                 'options': List<String>.from(doc.get('options')),
+                'info': doc.get('info'),
               })
           .toList();
     });
@@ -35,6 +36,14 @@ class questionsPageState extends State<questionsPage> {
     Firebase.initializeApp().then((_) {
       loadQuestions();
     });
+  }
+
+  void onBackPressed() {
+    if (currentQuestion > 0) {
+      setState(() {
+        currentQuestion--;
+      });
+    }
   }
 
   void onNextPressed() {
@@ -81,12 +90,35 @@ class questionsPageState extends State<questionsPage> {
     print(responses);
   }
 
-  void onBackPressed() {
-    if (currentQuestion > 0) {
-      setState(() {
-        currentQuestion--;
-      });
-    }
+  Widget buildInfoButton() {
+    return IconButton(
+      onPressed: () {
+        showInfoDialog(questionsData[currentQuestion]['info']);
+      },
+      color: Colors.redAccent,
+      icon: Icon(Icons.question_mark_outlined),
+      iconSize: 20,
+    );
+  }
+
+  void showInfoDialog(String info) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Information'),
+          content: Text(info),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget buildButtons() {
@@ -94,6 +126,7 @@ class questionsPageState extends State<questionsPage> {
       // next button
       return IconButton(
         onPressed: onNextPressed,
+        color: Colors.blue,
         icon: Icon(Icons.arrow_forward),
         iconSize: 30,
       );
@@ -101,6 +134,7 @@ class questionsPageState extends State<questionsPage> {
       // finish button
       return IconButton(
         onPressed: onFinishPressed,
+        color: Colors.green,
         icon: Icon(Icons.check_circle_sharp),
         iconSize: 30,
       );
@@ -110,39 +144,43 @@ class questionsPageState extends State<questionsPage> {
   }
 
   Widget buildOptionsList() {
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      itemCount: questionsData[currentQuestion]['options'].length,
-      itemBuilder: (context, index) {
-        String option = questionsData[currentQuestion]['options'][index];
-        return Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15.0),
-          ),
-          color: selectedOptions[currentQuestion] == option
-              ? Colors.blue[200]
-              : Colors.white,
-          child: RadioListTile(
-            title: Text(option),
-            value: option,
-            groupValue: selectedOptions[currentQuestion],
-            onChanged: (value) {
-              setState(() {
-                selectedOptions[currentQuestion] = value as String?;
-                responses.add({
-                  'setNumber': currentSet,
-                  'questionNumber': currentQuestion + 1,
-                  'selectedOption': value,
+    return SingleChildScrollView(
+      child: ListView.builder(
+        shrinkWrap: true,
+        physics: NeverScrollableScrollPhysics(),
+        itemCount: questionsData[currentQuestion]['options'].length,
+        itemBuilder: (context, index) {
+          String option = questionsData[currentQuestion]['options'][index];
+          return Container(
+              // margin: EdgeInsets.symmetric(horizontal: 500),
+              child: Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15.0),
+            ),
+            color: selectedOptions[currentQuestion] == option
+                ? Colors.blue[200]
+                : Colors.white,
+            child: RadioListTile(
+              title: Text(option),
+              value: option,
+              groupValue: selectedOptions[currentQuestion],
+              onChanged: (value) {
+                setState(() {
+                  selectedOptions[currentQuestion] = value as String?;
+                  responses.add({
+                    'setNumber': currentSet,
+                    'questionNumber': currentQuestion + 1,
+                    'selectedOption': value,
+                  });
+                  if (currentQuestion != questionsData.length - 1) {
+                    onNextPressed();
+                  }
                 });
-                if (currentQuestion != questionsData.length - 1) {
-                  onNextPressed();
-                }
-              });
-            },
-          ),
-        );
-      },
+              },
+            ),
+          ));
+        },
+      ),
     );
   }
 
@@ -151,12 +189,13 @@ class questionsPageState extends State<questionsPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Questionnaire'),
+        backgroundColor: Colors.blue,
       ),
       body: Center(
         child: questionsData.isEmpty
             ? CircularProgressIndicator()
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+            : ListView(
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
                 children: [
                   Text(
                     'Set $currentSet - Question ${currentQuestion + 1} of ${questionsData.length}',
@@ -176,9 +215,12 @@ class questionsPageState extends State<questionsPage> {
                       ),
                     ),
                   ),
+                  // Info Button
+                  buildInfoButton(),
                   // Options
                   SizedBox(height: 20),
                   buildOptionsList(),
+
                   // Buttons
                   SizedBox(height: 20),
                   Row(
